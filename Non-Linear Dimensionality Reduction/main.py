@@ -13,9 +13,10 @@ def read_data(fname):
     return np.array(x), np.array(y)
 
 
-train_x, train_y = read_data('./data/training25.csv')
+train_x, train_y = read_data('./data/train25.csv')
 val_x, val_y = read_data('./data/validation25.csv')
 test_x, test_y = read_data('./data/test25.csv')
+
 
 print("--------------------------------------------")
 print("TASK: Polynomial Regression")
@@ -116,7 +117,7 @@ print("--------------------------------------------")
 
 
 print("TASK: Multilayer Perceptron")
-NUM_EPOCH = 100
+NUM_EPOCH = 10
 
 
 def init_weights(in_channel, out_channel):
@@ -125,32 +126,85 @@ def init_weights(in_channel, out_channel):
     return w.transpose()
 
 
-def run_mlp(num_hidden_unit, x_train, y_train):
-    w1 = init_weights(1, num_hidden_unit)
-    w2 = init_weights(num_hidden_unit, 1)
+def init_bias():
+    return 0
 
-    losses = list()
-    for i in range(NUM_EPOCH):
-        batch_size = x_train.shape[0]
 
-        z1 = np.dot(x_train, w1)
-        a1 = np.maximum(z1, 0)
-        z2 = np.dot(a1, w2)
-        y_hat = np.maximum(z2, 0)
+def run_mlp(num_hidden_unit, X, y, weights=None, bias=None, is_train=True):
+    if weights is None:
+        w1 = init_weights(1, num_hidden_unit)
+        w2 = init_weights(num_hidden_unit, 1)
+    else:
+        w1, w2 = weights
 
-        losses.append(0.5 * np.square(y_hat - y_train).mean())
+    if bias is None:
+        b1 = init_bias()
+        b2 = init_bias()
+    else:
+        b1, b2 = bias
 
-        d2 = y_hat - y_train
-        g2 = np.dot(a1.transpose(), d2) / batch_size
+    def sigmoid(x):
+        return 1 / (1 + np.exp(-x))
+
+    def forward(X_):
+        z1 = np.dot(X_, w1) + b1
+        a1 = sigmoid(z1)
+        z2 = np.dot(a1, w2) + b2
+        y_hat = sigmoid(z2)
+        return y_hat, z1, a1
+
+    def step(X_, y_hat_, y_, z1_, a1_, w1_, w2_):  # TODO
+        batch_size = X_.shape[0]
+        d2 = y_hat_ - y_
+        g2 = np.dot(a1_.transpose(), d2) / batch_size
         d1 = np.dot(d2, w2.transpose())
-        d1[z1 <= 0] = 0
-        g1 = np.dot(x_train.transpose(), d1) / batch_size
+        d1 = sigmoid(d1) * (1 - sigmoid(d1))
+        g1 = np.dot(X_.transpose(), d1) / batch_size
 
-        w1 -= g1
-        w2 -= g2
+        w1_ -= g1
+        w2_ -= g2
+        return w1_, w2_
 
-    print(losses)
+    if is_train:
+        losses = list()
+        for _ in range(NUM_EPOCH):
+            y_hat, z1, a1 = forward(X)
+            losses.append(0.5 * np.square(y_hat - y).mean())
+            step(X, y_hat, y, z1, a1, w1, w2)
+        final_loss = losses[-1]
+    else:
+        y_hat, _, _ = forward(X)
+        final_loss = 0.5 * np.square(y_hat - y).mean()
+
+    return (w1, w2), (b1, b2), final_loss, y_hat
 
 
-run_mlp(100, np.expand_dims(train_x, axis=-1), np.expand_dims(train_y, axis=-1))
-# TODO
+model_lst = list()
+for i in range(1, 11):
+    weights, bias, _, _ = run_mlp(i, np.expand_dims(train_x, axis=-1), np.expand_dims(train_y, axis=-1))
+    _, _, val_loss, _ = run_mlp(i, np.expand_dims(val_x, axis=-1),
+                             np.expand_dims(val_y, axis=-1), weights=weights, bias=bias, is_train=False)
+    model_lst.append((i, weights, bias, val_loss))
+
+best_mlp_model = min(model_lst, key=lambda m: m[3])
+best_num_hidden_unit, best_weights, best_bias, _ = best_mlp_model
+
+_, _, test_loss, y_pred = run_mlp(best_num_hidden_unit, np.expand_dims(test_x, axis=-1),
+                                  np.expand_dims(test_y, axis=-1), weights=best_weights,
+                                  bias=best_bias, is_train=False)
+
+plt.plot(test_x, test_y, "b+", test_x, y_pred, "r")
+plt.xlabel("X")
+plt.ylabel("Value")
+# plt.savefig('./images/mlp_best_model_fit_on_test.png')
+plt.show()
+print("MSE Error on Test set: {}".format(test_loss))
+print("--------------------------------------------")
+
+plt.plot(train_x, train_y, "b+", train_x, y_pred, "r")
+plt.xlabel("X")
+plt.ylabel("Value")
+# plt.savefig('./images/mlp_best_model_fit_on_test.png')
+plt.show()
+print("MSE Error on Test set: {}".format(test_loss))
+print("--------------------------------------------")
