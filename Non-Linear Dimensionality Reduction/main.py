@@ -118,6 +118,7 @@ print("--------------------------------------------")
 
 print("TASK: Multilayer Perceptron")
 NUM_EPOCH = 10
+LR = 0.00001
 
 
 def init_weights(in_channel, out_channel):
@@ -143,44 +144,48 @@ def run_mlp(num_hidden_unit, X, y, weights=None, bias=None, is_train=True):
     else:
         b1, b2 = bias
 
-    def sigmoid(x):
+    def _sigmoid(x):
         return 1 / (1 + np.exp(-x))
+
+    def _derivative_sigmoid(x):
+        return x * (1 - x)
 
     def forward(X_):
         z1 = np.dot(X_, w1) + b1
-        a1 = sigmoid(z1)
+        a1 = _sigmoid(z1)
         z2 = np.dot(a1, w2) + b2
-        y_hat = sigmoid(z2)
-        return y_hat, z1, a1
+        return z1, z2
 
-    def step(X_, y_hat_, y_, z1_, a1_, w1_, w2_):  # TODO
-        batch_size = X_.shape[0]
-        d2 = y_hat_ - y_
-        g2 = np.dot(a1_.transpose(), d2) / batch_size
-        d1 = np.dot(d2, w2.transpose())
-        d1 = sigmoid(d1) * (1 - sigmoid(d1))
-        g1 = np.dot(X_.transpose(), d1) / batch_size
+    def step(X_, y_, z1_, z2_, w1_, w2_):  # TODO
+        layer2_error = y_ - z2_
+        layer2_delta = layer2_error * _derivative_sigmoid(z2_)
+        layer1_error = np.dot(layer2_delta, w2_.transpose())
+        layer1_delta = layer1_error * _derivative_sigmoid(z1_)
 
-        w1_ -= g1
-        w2_ -= g2
+        layer1_adjustment = np.dot(X_.transpose(), layer1_delta)
+        layer2_adjustment = np.dot(z1_.transpose(), layer2_delta)
+
+        # Adjust the weights.
+        w1_ += LR * layer1_adjustment
+        w2_ += LR * layer2_adjustment
         return w1_, w2_
 
     if is_train:
         losses = list()
         for _ in range(NUM_EPOCH):
-            y_hat, z1, a1 = forward(X)
-            losses.append(0.5 * np.square(y_hat - y).mean())
-            step(X, y_hat, y, z1, a1, w1, w2)
+            z1, z2 = forward(X)
+            losses.append(0.5 * np.square(y - z2).mean())
+            w1, w2 = step(X, y, z1, z2, w1, w2)
         final_loss = losses[-1]
     else:
-        y_hat, _, _ = forward(X)
-        final_loss = 0.5 * np.square(y_hat - y).mean()
+        _, z2 = forward(X)
+        final_loss = 0.5 * np.square(y - z2).mean()
 
-    return (w1, w2), (b1, b2), final_loss, y_hat
+    return (w1, w2), (b1, b2), final_loss, z2
 
 
 model_lst = list()
-for i in range(1, 11):
+for i in range(1, 101):
     weights, bias, _, _ = run_mlp(i, np.expand_dims(train_x, axis=-1), np.expand_dims(train_y, axis=-1))
     _, _, val_loss, _ = run_mlp(i, np.expand_dims(val_x, axis=-1),
                              np.expand_dims(val_y, axis=-1), weights=weights, bias=bias, is_train=False)
@@ -201,10 +206,10 @@ plt.show()
 print("MSE Error on Test set: {}".format(test_loss))
 print("--------------------------------------------")
 
-plt.plot(train_x, train_y, "b+", train_x, y_pred, "r")
-plt.xlabel("X")
-plt.ylabel("Value")
-# plt.savefig('./images/mlp_best_model_fit_on_test.png')
-plt.show()
-print("MSE Error on Test set: {}".format(test_loss))
-print("--------------------------------------------")
+# plt.plot(train_x, train_y, "b+", train_x, y_pred, "r")
+# plt.xlabel("X")
+# plt.ylabel("Value")
+# # plt.savefig('./images/mlp_best_model_fit_on_test.png')
+# plt.show()
+# print("MSE Error on Test set: {}".format(test_loss))
+# print("--------------------------------------------")
