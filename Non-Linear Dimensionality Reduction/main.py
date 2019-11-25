@@ -211,21 +211,24 @@ print("--------------------------------------------")
 
 line = np.dot(np.expand_dims(train_x, axis=-1), final_weights[0]) + final_bias[0]
 activated = 1 / (1 + np.exp(-line))
-output = activated * final_weights[1]
+output = activated * np.squeeze(final_weights[1], axis=-1)
+_, _, _, y_pred_train = run_mlp(best_num_hidden_unit, np.expand_dims(train_x, axis=-1),
+                                np.expand_dims(train_y, axis=-1), weights=best_weights,
+                                bias=best_bias, is_train=False)
 
-plt.plot(train_x, train_y, "b+", train_x, line, "b--", train_x, output, "r")
+plt.plot(train_x, train_y, "b+", train_x, line, "b--", train_x, y_pred_train, "r")
 plt.xlabel("X")
 plt.ylabel("Value")
 # plt.savefig('./images/mlp_line_learned_on_train.png')
 plt.show()
 
-plt.plot(train_x, train_y, "b+", train_x, activated, "b--", train_x, output, "r")
+plt.plot(train_x, train_y, "b+", train_x, activated, "b--", train_x, y_pred_train, "r")
 plt.xlabel("X")
 plt.ylabel("Value")
 # plt.savefig('./images/mlp_activation_learned_on_train.png')
 plt.show()
 
-plt.plot(train_x, train_y, "b+", train_x, output, "r")
+plt.plot(train_x, train_y, "b+", train_x, output, "b--", train_x, y_pred_train, "r")
 plt.xlabel("X")
 plt.ylabel("Value")
 # plt.savefig('./images/mlp_output_learned_on_train.png')
