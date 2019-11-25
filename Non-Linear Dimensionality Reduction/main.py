@@ -61,7 +61,7 @@ def cross_validate(x_train, y_train, x_val, y_val, max_degree=10):
 losses = cross_validate(train_x, train_y, val_x, val_y)
 best_degree, _, best_w_hat = min(losses, key=lambda l: l[1])
 
-# print(best_degree)
+print("Best degree: {}".format(best_degree))
 # print(best_w_hat)
 
 vec_x_test = vectorize_poly(test_x, best_degree)
@@ -105,6 +105,7 @@ def find_best_k(x_train, y_train, x_val, y_val, max_k=10):
 
 
 best_k = find_best_k(train_x, train_y, val_x, val_y)
+print("Best K: {}".format(best_k))
 y_pred = knn_regressor(best_k, train_x, train_y, test_x)
 
 plt.plot(test_x, test_y, "b+", test_x, y_pred, "r")
@@ -193,6 +194,8 @@ for i in range(1, 11):
 
 best_mlp_model = min(model_lst, key=lambda m: m[3])
 best_num_hidden_unit, best_weights, best_bias, _ = best_mlp_model
+
+print("Best num of units: {}".format(best_num_hidden_unit))
 
 _, _, test_loss, y_pred = run_mlp(best_num_hidden_unit, np.expand_dims(test_x, axis=-1),
                                   np.expand_dims(test_y, axis=-1), weights=best_weights,
