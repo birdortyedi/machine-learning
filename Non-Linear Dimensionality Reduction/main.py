@@ -117,7 +117,7 @@ print("--------------------------------------------")
 
 
 print("TASK: Multilayer Perceptron")
-NUM_EPOCH = 10
+NUM_EPOCH = 100
 LR = 0.00001
 
 
@@ -185,7 +185,7 @@ def run_mlp(num_hidden_unit, X, y, weights=None, bias=None, is_train=True):
 
 
 model_lst = list()
-for i in range(1, 101):
+for i in range(1, 11):
     weights, bias, _, _ = run_mlp(i, np.expand_dims(train_x, axis=-1), np.expand_dims(train_y, axis=-1))
     _, _, val_loss, _ = run_mlp(i, np.expand_dims(val_x, axis=-1),
                              np.expand_dims(val_y, axis=-1), weights=weights, bias=bias, is_train=False)
