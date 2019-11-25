@@ -119,7 +119,7 @@ print("--------------------------------------------")
 
 print("TASK: Multilayer Perceptron")
 NUM_EPOCH = 100
-LR = 0.00001
+LR = 0.00002
 
 
 def init_weights(in_channel, out_channel):
@@ -197,7 +197,7 @@ best_num_hidden_unit, best_weights, best_bias, _ = best_mlp_model
 
 print("Best num of units: {}".format(best_num_hidden_unit))
 
-_, _, test_loss, y_pred = run_mlp(best_num_hidden_unit, np.expand_dims(test_x, axis=-1),
+final_weights, final_bias, test_loss, y_pred = run_mlp(best_num_hidden_unit, np.expand_dims(test_x, axis=-1),
                                   np.expand_dims(test_y, axis=-1), weights=best_weights,
                                   bias=best_bias, is_train=False)
 
@@ -209,10 +209,24 @@ plt.show()
 print("MSE Error on Test set: {}".format(test_loss))
 print("--------------------------------------------")
 
-# plt.plot(train_x, train_y, "b+", train_x, y_pred, "r")
-# plt.xlabel("X")
-# plt.ylabel("Value")
-# # plt.savefig('./images/mlp_best_model_fit_on_test.png')
-# plt.show()
-# print("MSE Error on Test set: {}".format(test_loss))
-# print("--------------------------------------------")
+line = np.dot(np.expand_dims(train_x, axis=-1), final_weights[0]) + final_bias[0]
+activated = 1 / (1 + np.exp(-line))
+output = activated * final_weights[1]
+
+plt.plot(train_x, train_y, "b+", train_x, line, "b--", train_x, output, "r")
+plt.xlabel("X")
+plt.ylabel("Value")
+# plt.savefig('./images/mlp_line_learned_on_train.png')
+plt.show()
+
+plt.plot(train_x, train_y, "b+", train_x, activated, "b--", train_x, output, "r")
+plt.xlabel("X")
+plt.ylabel("Value")
+# plt.savefig('./images/mlp_activation_learned_on_train.png')
+plt.show()
+
+plt.plot(train_x, train_y, "b+", train_x, output, "r")
+plt.xlabel("X")
+plt.ylabel("Value")
+# plt.savefig('./images/mlp_output_learned_on_train.png')
+plt.show()
