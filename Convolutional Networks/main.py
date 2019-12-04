@@ -113,11 +113,11 @@ if __name__ == '__main__':
         train(epoch)
         epoch_accuracy, epoch_cm = test()
         if best_accuracy < epoch_accuracy:
-            max_accuracy = epoch_accuracy
-            torch.save(net.state_dict(), f"./weights/weights_epoch{epoch}_accuracy{max_accuracy}.pth")
+            best_accuracy = epoch_accuracy
+            torch.save(net.state_dict(), f"./weights/weights_epoch{epoch}_accuracy{best_accuracy}.pth")
             plt.matshow(epoch_cm)
             plt.colorbar()
-            plt.savefig(f"./images/cm_epoch{epoch}_accuracy{max_accuracy}.png")
+            plt.savefig(f"./images/cm_epoch{epoch}_accuracy{best_accuracy}.png")
             # plt.show()
     test()
     # TODO training cm
