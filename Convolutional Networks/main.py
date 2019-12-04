@@ -71,11 +71,10 @@ def train(epoch):
     # writer.add_scalar("on_epoch_loss", total_loss, epoch * batch_idx + batch_idx)
 
 
-def test(train_test=False):
+def test():
     correct = 0
     total = 0
     cm = np.zeros((10, 10), dtype=int)
-    max_accuracy = 0
     with torch.no_grad():
         net.eval()
         total_loss = 0.
@@ -102,21 +101,23 @@ def test(train_test=False):
         print(f"Accuracy: {accuracy}%")
         print(f"Confusion matrix:\n {cm}")
 
-        if train_test:
-            if max_accuracy < accuracy:
-                max_accuracy = accuracy
-                torch.save(net.state_dict(), f"./weights/weights_epoch{epoch}_accuracy{max_accuracy}.pth")
-                plt.matshow(cm)
-                plt.colorbar()
-                plt.savefig(f"./images/cm_epoch{epoch}_accuracy{accuracy}.png")
-                # plt.show()
-
         # writer.add_scalar("test_accuracy", accuracy, epoch * batch_idx + batch_idx)
         # writer.add_scalar("on_epoch_test_loss", total_loss, epoch * batch_idx + batch_idx)
 
+        return accuracy, cm
+
 
 if __name__ == '__main__':
+    best_accuracy = 0.0
     for epoch in range(0, 100):
         train(epoch)
-        test(train_test=True)
+        epoch_accuracy, epoch_cm = test()
+        if best_accuracy < epoch_accuracy:
+            max_accuracy = epoch_accuracy
+            torch.save(net.state_dict(), f"./weights/weights_epoch{epoch}_accuracy{max_accuracy}.pth")
+            plt.matshow(epoch_cm)
+            plt.colorbar()
+            plt.savefig(f"./images/cm_epoch{epoch}_accuracy{max_accuracy}.png")
+            # plt.show()
     test()
+    # TODO training cm
