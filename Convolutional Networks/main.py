@@ -40,8 +40,6 @@ optimizer = optim.Adam(net.parameters(), weight_decay=1e-6, lr=lr)
 scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
 # writer = SummaryWriter()
 
-max_accuracy = 0
-
 
 def compute_confusion_matrix(init_cm, y_true, y_pred):
     for i in range(len(y_true)):
@@ -77,6 +75,7 @@ def test(train_test=False):
     correct = 0
     total = 0
     cm = np.zeros((10, 10), dtype=int)
+    max_accuracy = 0
     with torch.no_grad():
         net.eval()
         total_loss = 0.
@@ -106,12 +105,12 @@ def test(train_test=False):
         plt.matshow(cm)
         plt.colorbar()
         plt.savefig(f"./images/cm_epoch{epoch}_accuracy{accuracy}.png")
-        plt.show()
+        # plt.show()
 
         if train_test:
             if max_accuracy < accuracy:
-                accuracy = max_accuracy
-                torch.save(net.state_dict(), f"./weights/weights_epoch{epoch}_accuracy{accuracy}.pth")
+                max_accuracy = accuracy
+                torch.save(net.state_dict(), f"./weights/weights_epoch{epoch}_accuracy{max_accuracy}.pth")
 
         # writer.add_scalar("test_accuracy", accuracy, epoch * batch_idx + batch_idx)
         # writer.add_scalar("on_epoch_test_loss", total_loss, epoch * batch_idx + batch_idx)
