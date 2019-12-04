@@ -102,15 +102,14 @@ def test(train_test=False):
         print(f"Accuracy: {accuracy}%")
         print(f"Confusion matrix:\n {cm}")
 
-        plt.matshow(cm)
-        plt.colorbar()
-        plt.savefig(f"./images/cm_epoch{epoch}_accuracy{accuracy}.png")
-        # plt.show()
-
         if train_test:
             if max_accuracy < accuracy:
                 max_accuracy = accuracy
                 torch.save(net.state_dict(), f"./weights/weights_epoch{epoch}_accuracy{max_accuracy}.pth")
+                plt.matshow(cm)
+                plt.colorbar()
+                plt.savefig(f"./images/cm_epoch{epoch}_accuracy{accuracy}.png")
+                # plt.show()
 
         # writer.add_scalar("test_accuracy", accuracy, epoch * batch_idx + batch_idx)
         # writer.add_scalar("on_epoch_test_loss", total_loss, epoch * batch_idx + batch_idx)
