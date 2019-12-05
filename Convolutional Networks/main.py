@@ -48,7 +48,10 @@ def compute_confusion_matrix(init_cm, y_true, y_pred):
 
 def train(epoch):
     net.train()
+    correct = 0
+    total = 0
     total_loss = 0.
+    cm = np.zeros((10, 10), dtype=int)
     for batch_idx, (x_train, y_train) in tqdm(enumerate(train_loader), ncols=50, desc="Training",
                                               bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.GREEN, Fore.RESET)):
         optimizer.zero_grad()
@@ -60,6 +63,11 @@ def train(epoch):
         optimizer.step()
         scheduler.step(epoch)
 
+        _, y_pred = torch.max(output.data, 1)
+        total += y_train.size(0)
+        correct += (y_pred == y_train).sum().item()
+        compute_confusion_matrix(cm, y_train, output)
+
         if batch_idx % 100 == 0:
             print(f"Step: {epoch * batch_idx + batch_idx}\t"
                   f"Epoch: {epoch} "
@@ -68,6 +76,11 @@ def train(epoch):
                   f"Loss: {loss.item()}"
                   )
 
+    train_accuracy = 100 * correct / total
+    plt.matshow(cm)
+    plt.colorbar()
+    plt.savefig(f"./images/train/cm_epoch{epoch}_accuracy{train_accuracy}.png")
+    # plt.show()
     # writer.add_scalar("on_epoch_loss", total_loss, epoch * batch_idx + batch_idx)
 
 
@@ -117,7 +130,6 @@ if __name__ == '__main__':
             torch.save(net.state_dict(), f"./weights/weights_epoch{epoch}_accuracy{best_accuracy}.pth")
             plt.matshow(epoch_cm)
             plt.colorbar()
-            plt.savefig(f"./images/cm_epoch{epoch}_accuracy{best_accuracy}.png")
+            plt.savefig(f"./images/test/cm_epoch{epoch}_accuracy{best_accuracy}.png")
             # plt.show()
     test()
-    # TODO training cm
