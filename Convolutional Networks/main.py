@@ -56,8 +56,9 @@ def train(epoch):
                                               bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.GREEN, Fore.RESET)):
         optimizer.zero_grad()
         x_train = x_train.to(device)
+        y_train = y_train.to(device)
         output = net(x_train)
-        loss = loss_fn(output, y_train.to(device))
+        loss = loss_fn(output, y_train)
         total_loss += loss.item()
         loss.backward()
         optimizer.step()
@@ -66,7 +67,7 @@ def train(epoch):
         _, y_pred = torch.max(output.data, 1)
         total += y_train.size(0)
         correct += (y_pred == y_train).sum().item()
-        compute_confusion_matrix(cm, y_train, output)
+        compute_confusion_matrix(cm, y_train, y_pred)
 
         if batch_idx % 100 == 0:
             print(f"Step: {epoch * batch_idx + batch_idx}\t"
